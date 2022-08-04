@@ -10,7 +10,7 @@
         "id": "6acb75e72c90ec23",
         "type": "mqtt in",
         "z": "1fa46118f4f122b4",
-        "name": "",
+        "name": "Temperatura",
         "topic": "CodigoIoT/SIC/G5/H2O/temp",
         "qos": "2",
         "datatype": "auto",
@@ -19,12 +19,16 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 180,
+        "x": 130,
         "y": 180,
         "wires": [
             [
-                "ff582e6d9ddfe2ff"
+                "ff582e6d9ddfe2ff",
+                "d62dfc06d65dc8ec"
             ]
+        ],
+        "outputLabels": [
+            "Temperatura"
         ]
     },
     {
@@ -34,8 +38,8 @@
         "name": "",
         "label": "Activar valvula Agua Limpia",
         "tooltip": "",
-        "group": "f4e702beb3672006",
-        "order": 0,
+        "group": "f8be81c57e27c5c1",
+        "order": 2,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -86,8 +90,8 @@
         "name": "",
         "label": "Activar Valvula de Solidos",
         "tooltip": "",
-        "group": "f4e702beb3672006",
-        "order": 2,
+        "group": "f8be81c57e27c5c1",
+        "order": 3,
         "width": 0,
         "height": 0,
         "passthru": true,
@@ -120,7 +124,7 @@
         "name": "",
         "label": "Manual/Automático",
         "tooltip": "",
-        "group": "f4e702beb3672006",
+        "group": "f8be81c57e27c5c1",
         "order": 1,
         "width": 0,
         "height": 0,
@@ -187,7 +191,7 @@
         "id": "091dc660de23aed9",
         "type": "mqtt in",
         "z": "1fa46118f4f122b4",
-        "name": "",
+        "name": "Dureza",
         "topic": "CodigoIoT/SIC/G5/H2O/ppm",
         "qos": "2",
         "datatype": "auto",
@@ -196,11 +200,12 @@
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 180,
+        "x": 110,
         "y": 80,
         "wires": [
             [
-                "d166219534efb721"
+                "d166219534efb721",
+                "0d074b535e37b136"
             ]
         ]
     },
@@ -210,9 +215,9 @@
         "z": "1fa46118f4f122b4",
         "name": "",
         "group": "f8be81c57e27c5c1",
-        "order": 2,
-        "width": 0,
-        "height": 0,
+        "order": 5,
+        "width": 6,
+        "height": 3,
         "gtype": "gage",
         "title": "Dureza",
         "label": "units",
@@ -237,12 +242,12 @@
         "z": "1fa46118f4f122b4",
         "name": "",
         "group": "f8be81c57e27c5c1",
-        "order": 1,
-        "width": 0,
-        "height": 0,
+        "order": 4,
+        "width": 6,
+        "height": 3,
         "gtype": "gage",
         "title": "Temperatura",
-        "label": "units",
+        "label": "Centígrados",
         "format": "{{value}}",
         "min": 0,
         "max": "55",
@@ -257,6 +262,88 @@
         "x": 450,
         "y": 180,
         "wires": []
+    },
+    {
+        "id": "d62dfc06d65dc8ec",
+        "type": "function",
+        "z": "1fa46118f4f122b4",
+        "name": "",
+        "func": "msg.topic = \"Temperatura\";\nmsg.payload = msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 140,
+        "wires": [
+            [
+                "1262bd4771be8342"
+            ]
+        ]
+    },
+    {
+        "id": "0d074b535e37b136",
+        "type": "function",
+        "z": "1fa46118f4f122b4",
+        "name": "",
+        "func": "msg.topic = \"Dureza\";\nmsg.payload = msg.payload;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 580,
+        "y": 100,
+        "wires": [
+            [
+                "1262bd4771be8342"
+            ]
+        ]
+    },
+    {
+        "id": "1262bd4771be8342",
+        "type": "ui_chart",
+        "z": "1fa46118f4f122b4",
+        "name": "",
+        "group": "2c49843bcc08ec1f",
+        "order": 1,
+        "width": 12,
+        "height": "9",
+        "label": "",
+        "chartType": "line",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "300",
+        "removeOlder": "5",
+        "removeOlderPoints": "",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#ef2929",
+            "#4e9a06",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 750,
+        "y": 120,
+        "wires": [
+            []
+        ]
     },
     {
         "id": "cd19ad63313fa054",
@@ -285,17 +372,6 @@
         "sessionExpiry": ""
     },
     {
-        "id": "f4e702beb3672006",
-        "type": "ui_group",
-        "name": "Manipulación de válvulas",
-        "tab": "cebb3f53d288520d",
-        "order": 2,
-        "disp": true,
-        "width": "6",
-        "collapse": false,
-        "className": ""
-    },
-    {
         "id": "f8be81c57e27c5c1",
         "type": "ui_group",
         "name": "Lectura Sensores",
@@ -303,6 +379,17 @@
         "order": 1,
         "disp": true,
         "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "2c49843bcc08ec1f",
+        "type": "ui_group",
+        "name": "Histórico",
+        "tab": "cebb3f53d288520d",
+        "order": 3,
+        "disp": true,
+        "width": "12",
         "collapse": false,
         "className": ""
     },
