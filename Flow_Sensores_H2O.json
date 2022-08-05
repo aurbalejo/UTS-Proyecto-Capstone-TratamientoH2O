@@ -1,30 +1,31 @@
 [
     {
-        "id": "1fa46118f4f122b4",
+        "id": "b85a9fc81f686326",
         "type": "tab",
         "label": "Flow 6",
         "disabled": false,
-        "info": "3 botones 2 led 1 DHT11"
+        "info": "Monitoreo de H20"
     },
     {
-        "id": "6acb75e72c90ec23",
+        "id": "cc6ae96a79add62c",
         "type": "mqtt in",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "Temperatura",
         "topic": "CodigoIoT/SIC/G5/H2O/temp",
         "qos": "2",
-        "datatype": "auto",
+        "datatype": "json",
         "broker": "cd19ad63313fa054",
         "nl": false,
         "rap": true,
         "rh": 0,
         "inputs": 0,
-        "x": 130,
-        "y": 180,
+        "x": 110,
+        "y": 200,
         "wires": [
             [
-                "ff582e6d9ddfe2ff",
-                "d62dfc06d65dc8ec"
+                "e51a4e905a8408d3",
+                "da9b4be764d9d1f2",
+                "7b04efbc1386a1c8"
             ]
         ],
         "outputLabels": [
@@ -32,11 +33,99 @@
         ]
     },
     {
-        "id": "a9bf1a724e89b2e3",
+        "id": "bb4b0be7d987aa27",
         "type": "ui_switch",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
         "label": "Activar valvula Agua Limpia",
+        "tooltip": "",
+        "group": "f8be81c57e27c5c1",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "animate": false,
+        "className": "",
+        "x": 160,
+        "y": 400,
+        "wires": [
+            [
+                "09095e19d98fd902",
+                "c40f7fe6011dc67a"
+            ]
+        ]
+    },
+    {
+        "id": "f48882e31c02d885",
+        "type": "mqtt out",
+        "z": "b85a9fc81f686326",
+        "name": "",
+        "topic": "CodigoIoT/SIC/G5/H2O/valSolidos",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd19ad63313fa054",
+        "x": 500,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "2a7896430d2005d3",
+        "type": "ui_switch",
+        "z": "b85a9fc81f686326",
+        "name": "",
+        "label": "Activar Valvula de Solidos",
+        "tooltip": "",
+        "group": "f8be81c57e27c5c1",
+        "order": 5,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "animate": false,
+        "className": "",
+        "x": 150,
+        "y": 300,
+        "wires": [
+            [
+                "f48882e31c02d885",
+                "c9104d2881719176"
+            ]
+        ]
+    },
+    {
+        "id": "eb537bd0371813a7",
+        "type": "ui_switch",
+        "z": "b85a9fc81f686326",
+        "name": "",
+        "label": "Manual/Automático",
         "tooltip": "",
         "group": "f8be81c57e27c5c1",
         "order": 2,
@@ -57,104 +146,18 @@
         "offcolor": "",
         "animate": false,
         "className": "",
-        "x": 160,
-        "y": 360,
-        "wires": [
-            [
-                "025206877dd605a7"
-            ]
-        ]
-    },
-    {
-        "id": "33f9f28a2a006091",
-        "type": "mqtt out",
-        "z": "1fa46118f4f122b4",
-        "name": "",
-        "topic": "CodigoIoT/SIC/G5/H2O/valSolidos",
-        "qos": "2",
-        "retain": "",
-        "respTopic": "",
-        "contentType": "",
-        "userProps": "",
-        "correl": "",
-        "expiry": "",
-        "broker": "cd19ad63313fa054",
-        "x": 500,
-        "y": 260,
-        "wires": []
-    },
-    {
-        "id": "865ba129bdd9b3db",
-        "type": "ui_switch",
-        "z": "1fa46118f4f122b4",
-        "name": "",
-        "label": "Activar Valvula de Solidos",
-        "tooltip": "",
-        "group": "f8be81c57e27c5c1",
-        "order": 3,
-        "width": 0,
-        "height": 0,
-        "passthru": true,
-        "decouple": "false",
-        "topic": "topic",
-        "topicType": "msg",
-        "style": "",
-        "onvalue": "true",
-        "onvalueType": "bool",
-        "onicon": "",
-        "oncolor": "",
-        "offvalue": "false",
-        "offvalueType": "bool",
-        "officon": "",
-        "offcolor": "",
-        "animate": false,
-        "className": "",
-        "x": 150,
-        "y": 260,
-        "wires": [
-            [
-                "33f9f28a2a006091"
-            ]
-        ]
-    },
-    {
-        "id": "b670df7dc2a3e4e6",
-        "type": "ui_switch",
-        "z": "1fa46118f4f122b4",
-        "name": "",
-        "label": "Manual/Automático",
-        "tooltip": "",
-        "group": "f8be81c57e27c5c1",
-        "order": 1,
-        "width": 0,
-        "height": 0,
-        "passthru": true,
-        "decouple": "false",
-        "topic": "topic",
-        "topicType": "msg",
-        "style": "",
-        "onvalue": "true",
-        "onvalueType": "bool",
-        "onicon": "",
-        "oncolor": "",
-        "offvalue": "false",
-        "offvalueType": "bool",
-        "officon": "",
-        "offcolor": "",
-        "animate": false,
-        "className": "",
         "x": 130,
         "y": 480,
         "wires": [
             [
-                "72d7cb55943ba7aa"
+                "279baf40056719bc"
             ]
         ]
     },
     {
-        "id": "025206877dd605a7",
+        "id": "09095e19d98fd902",
         "type": "mqtt out",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
         "topic": "CodigoIoT/SIC/G5/H2O/valLimpia",
         "qos": "2",
@@ -166,13 +169,13 @@
         "expiry": "",
         "broker": "cd19ad63313fa054",
         "x": 500,
-        "y": 360,
+        "y": 400,
         "wires": []
     },
     {
-        "id": "72d7cb55943ba7aa",
+        "id": "279baf40056719bc",
         "type": "mqtt out",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
         "topic": "CodigoIoT/SIC/G5/H2O/manuAuto",
         "qos": "2",
@@ -188,9 +191,9 @@
         "wires": []
     },
     {
-        "id": "091dc660de23aed9",
+        "id": "c09c07c6f48d44af",
         "type": "mqtt in",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "Dureza",
         "topic": "CodigoIoT/SIC/G5/H2O/ppm",
         "qos": "2",
@@ -204,18 +207,19 @@
         "y": 80,
         "wires": [
             [
-                "d166219534efb721",
-                "0d074b535e37b136"
+                "19028dd4bb5b8528",
+                "3fce7cc41f9140b7",
+                "6341d138c13ce523"
             ]
         ]
     },
     {
-        "id": "d166219534efb721",
+        "id": "19028dd4bb5b8528",
         "type": "ui_gauge",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
         "group": "f8be81c57e27c5c1",
-        "order": 5,
+        "order": 7,
         "width": 6,
         "height": 3,
         "gtype": "gage",
@@ -237,12 +241,12 @@
         "wires": []
     },
     {
-        "id": "ff582e6d9ddfe2ff",
+        "id": "e51a4e905a8408d3",
         "type": "ui_gauge",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
         "group": "f8be81c57e27c5c1",
-        "order": 4,
+        "order": 6,
         "width": 6,
         "height": 3,
         "gtype": "gage",
@@ -259,14 +263,14 @@
         "seg1": "15",
         "seg2": "30",
         "className": "",
-        "x": 450,
-        "y": 180,
+        "x": 430,
+        "y": 240,
         "wires": []
     },
     {
-        "id": "d62dfc06d65dc8ec",
+        "id": "da9b4be764d9d1f2",
         "type": "function",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
         "func": "msg.topic = \"Temperatura\";\nmsg.payload = msg.payload;\nreturn msg;",
         "outputs": 1,
@@ -274,18 +278,18 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
-        "y": 140,
+        "x": 720,
+        "y": 100,
         "wires": [
             [
-                "1262bd4771be8342"
+                "7612e0bd238ea3b5"
             ]
         ]
     },
     {
-        "id": "0d074b535e37b136",
+        "id": "3fce7cc41f9140b7",
         "type": "function",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
         "func": "msg.topic = \"Dureza\";\nmsg.payload = msg.payload;\nreturn msg;",
         "outputs": 1,
@@ -293,23 +297,23 @@
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 580,
-        "y": 100,
+        "x": 720,
+        "y": 60,
         "wires": [
             [
-                "1262bd4771be8342"
+                "7612e0bd238ea3b5"
             ]
         ]
     },
     {
-        "id": "1262bd4771be8342",
+        "id": "7612e0bd238ea3b5",
         "type": "ui_chart",
-        "z": "1fa46118f4f122b4",
+        "z": "b85a9fc81f686326",
         "name": "",
-        "group": "2c49843bcc08ec1f",
+        "group": "d7360bfd1683aeb4",
         "order": 1,
         "width": 12,
-        "height": "9",
+        "height": 10,
         "label": "",
         "chartType": "line",
         "legend": "true",
@@ -339,17 +343,194 @@
         "outputs": 1,
         "useDifferentColor": false,
         "className": "",
-        "x": 750,
-        "y": 120,
+        "x": 1050,
+        "y": 80,
         "wires": [
             []
+        ]
+    },
+    {
+        "id": "97ee28efb014edce",
+        "type": "mysql",
+        "z": "b85a9fc81f686326",
+        "mydb": "cfe448936f93e4ac",
+        "name": "Historial",
+        "x": 940,
+        "y": 240,
+        "wires": [
+            [
+                "5b4c75f27b41dbb3"
+            ]
+        ]
+    },
+    {
+        "id": "5b4c75f27b41dbb3",
+        "type": "debug",
+        "z": "b85a9fc81f686326",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1110,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "6341d138c13ce523",
+        "type": "function",
+        "z": "b85a9fc81f686326",
+        "name": "EscribePPM",
+        "func": "var ppm = msg.payload;\nmsg.topic = \"INSERT INTO lecturasensorppm (lecturappm) VALUES ('\"+ppm+\"');\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 160,
+        "wires": [
+            [
+                "97ee28efb014edce"
+            ]
+        ]
+    },
+    {
+        "id": "7b04efbc1386a1c8",
+        "type": "function",
+        "z": "b85a9fc81f686326",
+        "name": "EscribeTemp",
+        "func": "var temp = msg.payload;\nmsg.topic = \"INSERT INTO lecturasensortemp (lecturatemp) VALUES ('\"+temp+\"');\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 710,
+        "y": 200,
+        "wires": [
+            [
+                "97ee28efb014edce"
+            ]
+        ]
+    },
+    {
+        "id": "c40f7fe6011dc67a",
+        "type": "function",
+        "z": "b85a9fc81f686326",
+        "name": "Estado VTratada",
+        "func": "var valvulat = 0;\nif (msg.payload == true){\n    valvulat = 1;\n}\nmsg.topic = \"INSERT INTO eventostratada (valvulatratada) VALUES ('\"+valvulat+\"');\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 730,
+        "y": 340,
+        "wires": [
+            [
+                "97ee28efb014edce",
+                "cc783dd1cde8ae3c"
+            ]
+        ]
+    },
+    {
+        "id": "cc783dd1cde8ae3c",
+        "type": "debug",
+        "z": "b85a9fc81f686326",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1030,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "c9104d2881719176",
+        "type": "function",
+        "z": "b85a9fc81f686326",
+        "name": "Estado VSolidos",
+        "func": "var valvulas = 0;\nif (msg.payload == true){\n    valvulas = 1;\n}\nmsg.topic = \"INSERT INTO eventossolid (valvulasolid) VALUES ('\"+valvulas+\"');\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 720,
+        "y": 240,
+        "wires": [
+            [
+                "97ee28efb014edce",
+                "cc783dd1cde8ae3c"
+            ]
+        ]
+    },
+    {
+        "id": "61564ee44d6a414a",
+        "type": "mqtt out",
+        "z": "b85a9fc81f686326",
+        "name": "",
+        "topic": "CodigoIoT/SIC/G5/H2O/bomba",
+        "qos": "2",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "cd19ad63313fa054",
+        "x": 490,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "af30ec670bc34c22",
+        "type": "ui_switch",
+        "z": "b85a9fc81f686326",
+        "name": "",
+        "label": "Bomba ON/OFF",
+        "tooltip": "",
+        "group": "f8be81c57e27c5c1",
+        "order": 3,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": "false",
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "animate": false,
+        "className": "",
+        "x": 120,
+        "y": 560,
+        "wires": [
+            [
+                "61564ee44d6a414a"
+            ]
         ]
     },
     {
         "id": "cd19ad63313fa054",
         "type": "mqtt-broker",
         "name": "",
-        "broker": "18.195.236.18",
+        "broker": "192.168.2.6",
         "port": "1883",
         "clientid": "",
         "autoConnect": true,
@@ -374,16 +555,15 @@
     {
         "id": "f8be81c57e27c5c1",
         "type": "ui_group",
-        "name": "Lectura Sensores",
+        "name": "Rx",
         "tab": "cebb3f53d288520d",
         "order": 1,
         "disp": true,
         "width": "6",
-        "collapse": false,
-        "className": ""
+        "collapse": false
     },
     {
-        "id": "2c49843bcc08ec1f",
+        "id": "d7360bfd1683aeb4",
         "type": "ui_group",
         "name": "Histórico",
         "tab": "cebb3f53d288520d",
@@ -394,9 +574,19 @@
         "className": ""
     },
     {
+        "id": "cfe448936f93e4ac",
+        "type": "MySQLdatabase",
+        "name": "",
+        "host": "127.0.0.1",
+        "port": "3306",
+        "db": "iot",
+        "tz": "",
+        "charset": "UTF8"
+    },
+    {
         "id": "cebb3f53d288520d",
         "type": "ui_tab",
-        "name": "Monitoreo ósmosis inversa",
+        "name": "Comunicación MQTT con ESP32CAM",
         "icon": "dashboard",
         "order": 4,
         "disabled": false,
