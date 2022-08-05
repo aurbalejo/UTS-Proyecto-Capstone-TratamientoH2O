@@ -1,4 +1,4 @@
-# UTS-Proyecto-Capstone-TratamientoH2O
+# Proyecto Capstone - Tratamiento y Calidad de Agua
 Archivos de trabajo para el proyecto capstone del diplomado SIC-IoT
 
 Este proyecto se enfoca en monitoreo y mantenimiento de la calidad del agua en una planta purificadora de agua.
