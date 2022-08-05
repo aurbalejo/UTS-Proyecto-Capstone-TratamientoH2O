@@ -27,8 +27,8 @@ const char* ssid = "IoT";  // Aquí debes poner el nombre de tu red
 const char* password = "cursoiot";  // Aquí debes poner la contraseña de tu red
 
 //Datos del broker MQTT
-const char* mqtt_server = "18.195.236.18"; // Si estas en una red local, coloca la IP asignada, en caso contrario, coloca la IP publica
-IPAddress server(18,195,236,18);
+const char* mqtt_server = "192.168.2.6"; // Si estas en una red local, coloca la IP asignada, en caso contrario, coloca la IP publica
+IPAddress server(192,168,2,6);
 
 // Objetos
 WiFiClient espClient; // Este objeto maneja los datos de conexion WiFi
@@ -39,24 +39,22 @@ PubSubClient client(espClient); // Este objeto maneja los datos de conexion al b
 const int pinValLimpia = 23; // Manual. Activa la refrigeración al ser presionado
 const int pinValSolido = 18;
 const int pinBomba = 21;
-//const double temAlta = 32.5;  // set point de temperatura Alta
 
 // Variables
 float temperature = 25,tdsValue = 0, tempReal=18;;
-float voltajePromedio=0;
+float voltajePromedio=0, CompCoef, compVoltaje;
 long timeObjetivo, timeActual, timeObjetivo2; // Variables de control de tiempo no bloqueante
-//bool EstadoBoton1;              // Estado lógico BOTON1
+long timeObjSim1, timeObjSim2;  // tiempo de simulación de ajuste
 float tdsS=0, tdsC=0, tds=0;
-int aguaSolida, aguaLimpia, varManuAuto;  
-
+int aguaSolida, aguaLimpia, varManuAuto, varBomba;  
+int simPaso1, simPaso2, simPaso3;
 int espera = 2000;  // Indica la espera cada 5 segundos para envío de mensajes MQTT
-// Definición de objetos
- 
+int statusLedPin = 2;
+
+// Definición de objetos 
   #define ONE_WIRE_BUS 13
   #define TdsSensorPin 36
   OneWire oneWire(ONE_WIRE_BUS);
-  int statusLedPin = 2;
-  
   DallasTemperature sensors(&oneWire);
 
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -119,9 +117,11 @@ void setup() {// Inicio de void setup ()
   aguaSolida =1;
   aguaLimpia =1;
   varManuAuto=0;
+  simPaso1=0, simPaso2=0, simPaso3=0;
   client.subscribe("CodigoIoT/SIC/G5/H2O/valSolidos"); // Esta función realiza la suscripción al tema
   client.subscribe("CodigoIoT/SIC/G5/H2O/valLimpia"); // Esta función realiza la suscripción al tema
-  client.subscribe("CodigoIoT/SIC/G5/H2O/manuAuto"); 
+  client.subscribe("CodigoIoT/SIC/G5/H2O/manuAuto");
+  client.subscribe("CodigoIoT/SIC/G5/H2O/bomba"); 
 }// Fin de void setup
 
 
@@ -136,12 +136,14 @@ void loop() {// Inicio de void loop
   }// fin del if (!client.connected())
   client.loop(); // Esta función es muy importante, ejecuta de manera no bloqueante las funciones necesarias para la comunicación con el broker
   
-  timeActual = millis(); // Control de tiempo para esperas no bloqueantes
-
+   timeActual = millis(); // Control de tiempo para esperas no bloqueantes
+   lecturaSensores();
    lecturaSensorTDS();
    lecturaSensorTemperatura();
 
    if (varManuAuto == 0){
+    
+         simPaso1=0, simPaso2=0,simPaso3=0;
          if ( aguaSolida == 0) {
              digitalWrite(pinValLimpia, LOW);
          }
@@ -156,22 +158,38 @@ void loop() {// Inicio de void loop
              digitalWrite(pinValSolido, HIGH);
          }
       }
-   else {
-         if ( tempReal<25) {
-             digitalWrite(pinValLimpia, LOW);
-         }
-         else {
-             digitalWrite(pinValLimpia, HIGH);
-         }
-      
-         if (tempReal > 25) {
-             digitalWrite(pinValSolido, LOW);
-         }
-         else {
-             digitalWrite(pinValSolido, HIGH);
-         }
+
+// Simulacion del proceso de ósmosis inversa
+
+    if (varManuAuto == 1) {
+
+      if (simPaso1==0 && tdsValue > 60){
+        timeObjSim1=timeActual + 10000;
+        digitalWrite(pinValSolido, LOW);
+        digitalWrite(pinValLimpia, HIGH);
+        simPaso1=1;
+      }
+
+      if (simPaso1 == 1 && simPaso2 == 0 && timeActual >= timeObjSim1) {
+        digitalWrite(pinValLimpia, LOW);
+        timeObjSim2=timeActual + 5000;
+        simPaso2 = 1;
+      }
+
+      if (simPaso3==0 && simPaso2==1 && tdsValue < 130){
+        digitalWrite(pinValSolido, HIGH);
+        simPaso3=1;
+      }
+     
+   }
    
-     }
+   //Encendido y apagado de la Bomba
+   if (varBomba == 1){
+      digitalWrite(pinBomba, LOW);
+   }
+   else{
+      digitalWrite(pinBomba, HIGH);
+   }
 }                     // Fin de void loop
 //  ****************************************************************
 
@@ -224,8 +242,19 @@ void callback(char* topic, byte* message, unsigned int length) {
       varManuAuto = 0;
     }// fin del else if(messageTemp == "false")
   }// fin del if (String(topic) == )
-  
-  delay(10);
+
+  if (String(topic) == "CodigoIoT/SIC/G5/H2O/bomba") {  // En caso de recibirse mensaje en el tema esp32/output
+    if(messageTemp == "true"){
+      Serial.println("Activar BOMBA");
+      varBomba = 1;
+    }
+    else if(messageTemp == "false"){
+      Serial.println("Desactivar BOMBA");
+      varBomba = 0;
+    }// fin del else if(messageTemp == "false")
+  }// fin del if (String(topic) == )
+    
+  delay(100);
 }// fin del void callback
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -233,23 +262,29 @@ void callback(char* topic, byte* message, unsigned int length) {
 
 // Funcioes del usuario
 
+//LECTURA DE SENSORES
+void lecturaSensores(){
+    sensors.requestTemperatures();
+    tempReal = sensors.getTempCByIndex(0);
+    
+    tds = analogRead(TdsSensorPin);
+    tdsS = tds*(0.244200244200244);  // 1000/4095
+     voltajePromedio=tds*5.0/4095;
+     CompCoef=1.0 + 0.02*(tempReal-25.0);
+     compVoltaje=voltajePromedio/CompCoef;
+     tdsValue=(133.42*compVoltaje*compVoltaje*compVoltaje-255.86*compVoltaje*compVoltaje+857.39*compVoltaje)*0.5;
+
+}
+
 //LECTURA SENSOR  T D S
 void lecturaSensorTDS(){
 
   if (timeActual >= timeObjetivo ) { // Manda un mensaje por MQTT cada cinco segundos
     timeObjetivo = timeActual + espera; // Actualización de seguimiento de tiempo
-
-    tds = analogRead(TdsSensorPin);
-    tdsS = tds*(0.244200244200244);  // 1000/4095
     
     Serial.print("Sensor =");
     Serial.print(tds);
-    Serial.print(" ==> ");
-    
-     voltajePromedio=tds*5.0/4095;
-     float CompCoef=1.0 + 0.02*(tempReal-25.0);
-     float compVoltaje=voltajePromedio/CompCoef;
-     tdsValue=(133.42*compVoltaje*compVoltaje*compVoltaje-255.86*compVoltaje*compVoltaje+857.39*compVoltaje)*0.5;
+    Serial.print(" ==> ");    
      Serial.print(tdsValue);
      Serial.print(" ppm");
      
@@ -266,9 +301,6 @@ void lecturaSensorTemperatura(){
 
   if (timeActual >= timeObjetivo2 ) { // Manda un mensaje por MQTT cada cinco segundos
     timeObjetivo2 = timeActual + espera; // Actualización de seguimiento de tiempo
-
-     sensors.requestTemperatures();
-     tempReal = sensors.getTempCByIndex(0);
 
      Serial.print("  Temperatura: ");
      Serial.println(tempReal);
@@ -293,6 +325,7 @@ void reconnect() {
       client.subscribe("CodigoIoT/SIC/G5/H2O/valSolidos"); // Esta función realiza la suscripción al tema
       client.subscribe("CodigoIoT/SIC/G5/H2O/valLimpia");
       client.subscribe("CodigoIoT/SIC/G5/H2O/manuAuto");
+      client.subscribe("CodigoIoT/SIC/G5/H2O/bomba");
     }// fin del  if (client.connect("ESP32CAMClient"))
     else {  //en caso de que la conexión no se logre
       Serial.print("Conexion fallida, Error rc=");
