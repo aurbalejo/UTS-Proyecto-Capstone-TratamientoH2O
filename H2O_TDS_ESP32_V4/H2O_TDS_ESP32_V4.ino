@@ -4,16 +4,13 @@
  * Fecha: 20 de JULIO de 2022
  * 
  * Características
+ * Automatizar el proceso de ósmosis inversa
 
   *Sensor de temperatura 
   *Sendor de Dureza de H2O TDS
   *Valvulas On/Off
   *Bomba de agua
   *Boton arranque de bomba: 
-
-  *Botones 14, 15, 13
-  *Leds 4, 2
-  *DHT11 12
  */
 
 // Bibliotecas
@@ -48,7 +45,7 @@ long timeObjSim1, timeObjSim2;  // tiempo de simulación de ajuste
 float tdsS=0, tdsC=0, tds=0;
 int aguaSolida, aguaLimpia, varManuAuto, varBomba;  
 int simPaso1, simPaso2, simPaso3;
-int espera = 2000;  // Indica la espera cada 5 segundos para envío de mensajes MQTT
+int espera = 8000;  // Indica la espera cada 5 segundos para envío de mensajes MQTT
 int statusLedPin = 2;
 
 // Definición de objetos 
@@ -112,12 +109,14 @@ void setup() {// Inicio de void setup ()
   delay(1500);  // Esta espera es preventiva, espera a la conexión para no perder información
 
   timeActual = millis (); // Inicia el control de tiempo
-  timeObjetivo = timeActual + 1000;
-  timeObjetivo2 = timeActual + 2000;
+  timeObjetivo = timeActual + 4000;
+  timeObjetivo2 = timeActual + 8000;
   aguaSolida =1;
   aguaLimpia =1;
   varManuAuto=0;
-  simPaso1=0, simPaso2=0, simPaso3=0;
+  simPaso1=0;
+  simPaso2=0; 
+  simPaso3=0;
   client.subscribe("CodigoIoT/SIC/G5/H2O/valSolidos"); // Esta función realiza la suscripción al tema
   client.subscribe("CodigoIoT/SIC/G5/H2O/valLimpia"); // Esta función realiza la suscripción al tema
   client.subscribe("CodigoIoT/SIC/G5/H2O/manuAuto");
@@ -163,24 +162,33 @@ void loop() {// Inicio de void loop
 
     if (varManuAuto == 1) {
 
-      if (simPaso1==0 && tdsValue > 60){
-        timeObjSim1=timeActual + 10000;
-        digitalWrite(pinValSolido, LOW);
-        digitalWrite(pinValLimpia, HIGH);
+      if (simPaso1==0){
+        timeObjSim1=timeActual + 45000;
+        digitalWrite(pinValSolido, HIGH);
+        digitalWrite(pinValLimpia, LOW);
+        delay(100);
         simPaso1=1;
       }
 
       if (simPaso1 == 1 && simPaso2 == 0 && timeActual >= timeObjSim1) {
+        digitalWrite(pinValSolido, LOW);
         digitalWrite(pinValLimpia, LOW);
-        timeObjSim2=timeActual + 5000;
+        delay(100);
+        timeObjSim2=timeActual + 40000;
         simPaso2 = 1;
       }
 
-      if (simPaso3==0 && simPaso2==1 && tdsValue < 130){
-        digitalWrite(pinValSolido, HIGH);
+      if (simPaso3==0 && simPaso2==1 && timeActual >= timeObjSim2){
+        timeObjSim1=timeActual + 5000;
+        digitalWrite(pinValLimpia, HIGH);
+        digitalWrite(pinValSolido, LOW);
+        delay(100);
         simPaso3=1;
       }
-     
+     if (simPaso3==1 && timeActual >= timeObjSim1){
+        digitalWrite(pinValLimpia, HIGH);
+        digitalWrite(pinValSolido, HIGH);
+     }
    }
    
    //Encendido y apagado de la Bomba
@@ -269,11 +277,18 @@ void lecturaSensores(){
     
     tds = analogRead(TdsSensorPin);
     tdsS = tds*(0.244200244200244);  // 1000/4095
+    if (tdsS<20){
+      tdsValue=20;
+    }
+    else if (tdsS < 100) {
+      tdsValue=tdsS;
+    }
+    else {
      voltajePromedio=tds*5.0/4095;
      CompCoef=1.0 + 0.02*(tempReal-25.0);
      compVoltaje=voltajePromedio/CompCoef;
      tdsValue=(133.42*compVoltaje*compVoltaje*compVoltaje-255.86*compVoltaje*compVoltaje+857.39*compVoltaje)*0.5;
-
+    }
 }
 
 //LECTURA SENSOR  T D S
