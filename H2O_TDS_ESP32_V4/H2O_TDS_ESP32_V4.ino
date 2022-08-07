@@ -31,7 +31,10 @@ IPAddress server(192,168,2,6);
 // Objetos
 WiFiClient espClient; // Este objeto maneja los datos de conexion WiFi
 PubSubClient client(espClient); // Este objeto maneja los datos de conexion al broker
-
+#define ONE_WIRE_BUS 13    //Para sensor de temperatura
+#define TdsSensorPin 36    //Para sensor de Dureza de agua
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
 
 // Constantes
 const int pinValLimpia = 18; // Pin que activa electroválvula con dureza menor a 40 ppm
@@ -48,12 +51,6 @@ float tdsS=0, tdsC=0, tds=0;
 int aguaSolida, aguaLimpia, varManuAuto, varBomba; // Para tomar deciciones que llegan de Node-Red 
 int simPaso1, simPaso2, simPaso3; // Para simular proceso
 int espera = 8000;  // tiempo para envío de mensajes MQTT
-
-// Definición de objetos 
-  #define ONE_WIRE_BUS 13    //Para sensor de temperatura
-  #define TdsSensorPin 36    //Para sensor de Dureza de agua
-  OneWire oneWire(ONE_WIRE_BUS);
-  DallasTemperature sensors(&oneWire);
 
 //  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Condiciones iniciales - Se ejecuta sólo una vez al energizar
