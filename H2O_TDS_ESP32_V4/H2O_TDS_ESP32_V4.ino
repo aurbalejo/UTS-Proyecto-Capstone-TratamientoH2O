@@ -4,20 +4,21 @@
  * Fecha: 20 de JULIO de 2022
  * 
  * Características
- * Automatizar el proceso de ósmosis inversa
+ * Automatizar el proceso de ósmosis inversa del sistema de
+ * purificación de agua de la UTS
 
-  *Sensor de temperatura 
-  *Sendor de Dureza de H2O TDS
-  *Valvulas On/Off
-  *Bomba de agua
-  *Boton arranque de bomba: 
+  *Sensor de temperatura  ............(GPIO13)
+  *Sendor de Dureza de H2O TDS .......(GPIO36)
+  *Válvula Agua con Solidos  .........(GPIO23)
+  *Válvula Agua DUREZA menor a 40 ppm (GPIO18)
+  *Bomba de agua  ....................(GPIO21)
  */
 
 // Bibliotecas
 #include <WiFi.h>  // Biblioteca para el control de WiFi
 #include <PubSubClient.h> //Biblioteca para conexion MQTT
-#include <OneWire.h> 
-#include <DallasTemperature.h>
+#include <OneWire.h> // Para el manejo del sensor DS18b20
+#include <DallasTemperature.h> // Para el manejo del sensor DS18b20
 
 //Datos de WiFi
 const char* ssid = "IoT";  // Aquí debes poner el nombre de tu red
@@ -33,24 +34,24 @@ PubSubClient client(espClient); // Este objeto maneja los datos de conexion al b
 
 
 // Constantes
-const int pinValLimpia = 23; // Manual. Activa la refrigeración al ser presionado
-const int pinValSolido = 18;
-const int pinBomba = 21;
+const int pinValLimpia = 18; // Pin que activa electroválvula con dureza menor a 40 ppm
+const int pinValSolido = 23;  // Pin que activa electroválvula de agua con dureza alta
+const int pinBomba = 21;  // Pin que activa bomba de agua
+const int statusLedPin = 2;  // Estado de conexion con la Red Wifi
 
 // Variables
-float temperature = 25,tdsValue = 0, tempReal=18;;
-float voltajePromedio=0, CompCoef, compVoltaje;
+float temperature = 25,tdsValue = 0, tempReal=18; //Variables para el sensor
+float voltajePromedio=0, CompCoef, compVoltaje; // Variables para caracterizar sensor
 long timeObjetivo, timeActual, timeObjetivo2; // Variables de control de tiempo no bloqueante
 long timeObjSim1, timeObjSim2;  // tiempo de simulación de ajuste
 float tdsS=0, tdsC=0, tds=0;
-int aguaSolida, aguaLimpia, varManuAuto, varBomba;  
-int simPaso1, simPaso2, simPaso3;
-int espera = 8000;  // Indica la espera cada 5 segundos para envío de mensajes MQTT
-int statusLedPin = 2;
+int aguaSolida, aguaLimpia, varManuAuto, varBomba; // Para tomar deciciones que llegan de Node-Red 
+int simPaso1, simPaso2, simPaso3; // Para simular proceso
+int espera = 8000;  // tiempo para envío de mensajes MQTT
 
 // Definición de objetos 
-  #define ONE_WIRE_BUS 13
-  #define TdsSensorPin 36
+  #define ONE_WIRE_BUS 13    //Para sensor de temperatura
+  #define TdsSensorPin 36    //Para sensor de Dureza de agua
   OneWire oneWire(ONE_WIRE_BUS);
   DallasTemperature sensors(&oneWire);
 
@@ -59,18 +60,13 @@ int statusLedPin = 2;
 void setup() {// Inicio de void setup ()
   Serial.begin (115200);  // Se inicia comunicación serial a 115200 baudios
   Serial.println("Conectado... ");
-
   pinMode(TdsSensorPin,INPUT);
   adcAttachPin(TdsSensorPin);
-
   sensors.begin();
-
-  pinMode (statusLedPin, OUTPUT);
-
-//  pinMode (pinBOTON1, INPUT_PULLUP); // Configurar el pin 13 BOTON1 como entrada con lógica inversa (PULLUP)
-  pinMode (pinValLimpia, OUTPUT);  // Configurar pin 4 LED2 como salida
-  pinMode (pinValSolido, OUTPUT);
-  pinMode (pinBomba, OUTPUT);
+  pinMode (statusLedPin, OUTPUT);  // Configurar pin como salida
+  pinMode (pinValLimpia, OUTPUT);  // Configurar pin como salida
+  pinMode (pinValSolido, OUTPUT);  // Configurar pin como salida
+  pinMode (pinBomba, OUTPUT);      // Configurar pin como salida
   
 
  //Inicia conexion a WiFi
@@ -93,7 +89,7 @@ void setup() {// Inicio de void setup ()
   Serial.println();
   Serial.println("WiFi conectado");
   Serial.println("Direccion IP: ");
-  Serial.println(WiFi.localIP());
+  Serial.println(WiFi.localIP());   //Muestra la dirección IP del la ESP32
 
 // Si se logro la conexión, encender led
   if (WiFi.status () > 0){
@@ -108,15 +104,16 @@ void setup() {// Inicio de void setup ()
  
   delay(1500);  // Esta espera es preventiva, espera a la conexión para no perder información
 
-  timeActual = millis (); // Inicia el control de tiempo
-  timeObjetivo = timeActual + 4000;
-  timeObjetivo2 = timeActual + 8000;
+  timeActual = millis (); // Variable que contiene el tiempo en milisegundos de cada ciclo
+  timeObjetivo = timeActual + 4000; // tiempo objetivo de 4 seg
+  timeObjetivo2 = timeActual + 8000;// tiempo objetivo de 8 seg
   aguaSolida =1;
   aguaLimpia =1;
   varManuAuto=0;
   simPaso1=0;
   simPaso2=0; 
   simPaso3=0;
+  // Debes subcribirte a los topic que envía NODE-RED
   client.subscribe("CodigoIoT/SIC/G5/H2O/valSolidos"); // Esta función realiza la suscripción al tema
   client.subscribe("CodigoIoT/SIC/G5/H2O/valLimpia"); // Esta función realiza la suscripción al tema
   client.subscribe("CodigoIoT/SIC/G5/H2O/manuAuto");
@@ -135,13 +132,13 @@ void loop() {// Inicio de void loop
   }// fin del if (!client.connected())
   client.loop(); // Esta función es muy importante, ejecuta de manera no bloqueante las funciones necesarias para la comunicación con el broker
   
-   timeActual = millis(); // Control de tiempo para esperas no bloqueantes
-   lecturaSensores();
-   lecturaSensorTDS();
-   lecturaSensorTemperatura();
+   timeActual = millis(); // Variable que contiene el tiempo en milisegundos de cada ciclo
+   lecturaSensores();  // Función de lectura de sensores
+   lecturaSensorTDS(); // Función que envía al Broker la dureza del agua
+   lecturaSensorTemperatura(); // Función que envía al broker la Temperatura
 
-   if (varManuAuto == 0){
-    
+// Condiciones para operación Manual
+   if (varManuAuto == 0){  
          simPaso1=0, simPaso2=0,simPaso3=0;
          if ( aguaSolida == 0) {
              digitalWrite(pinValLimpia, LOW);
@@ -156,7 +153,7 @@ void loop() {// Inicio de void loop
          else {
              digitalWrite(pinValSolido, HIGH);
          }
-      }
+      }  // Fin del modo Manual
 
 // Simulacion del proceso de ósmosis inversa
 
@@ -164,8 +161,8 @@ void loop() {// Inicio de void loop
 
       if (simPaso1==0){
         timeObjSim1=timeActual + 45000;
-        digitalWrite(pinValSolido, HIGH);
-        digitalWrite(pinValLimpia, LOW);
+        digitalWrite(pinVallimpia, HIGH);
+        digitalWrite(pinValSolido, LOW);
         delay(100);
         simPaso1=1;
       }
@@ -180,8 +177,8 @@ void loop() {// Inicio de void loop
 
       if (simPaso3==0 && simPaso2==1 && timeActual >= timeObjSim2){
         timeObjSim1=timeActual + 5000;
-        digitalWrite(pinValLimpia, HIGH);
-        digitalWrite(pinValSolido, LOW);
+        digitalWrite(pinValSolido, HIGH);
+        digitalWrite(pinValLimpia, LOW);
         delay(100);
         simPaso3=1;
       }
@@ -189,7 +186,7 @@ void loop() {// Inicio de void loop
         digitalWrite(pinValLimpia, HIGH);
         digitalWrite(pinValSolido, HIGH);
      }
-   }
+   }  // Fin del modo automático
    
    //Encendido y apagado de la Bomba
    if (varBomba == 1){
@@ -212,12 +209,9 @@ void callback(char* topic, byte* message, unsigned int length) {
     //Serial.print((char)message[i]);
     messageTemp += (char)message[i];
   }
-
-  // En esta parte puedes agregar las funciones que requieras para actuar segun lo necesites al recibir un mensaje MQTT
-
   // Ejemplo, en caso de recibir el mensaje true - false, se cambiará el estado del led soldado en la placa.
   // El ESP32 está suscrito al tema
-  if (String(topic) == "CodigoIoT/SIC/G5/H2O/valSolidos") {  // En caso de recibirse mensaje en el tema esp32/output
+  if (String(topic) == "CodigoIoT/SIC/G5/H2O/valSolidos") {  // En caso de recibirse mensaje en el tema
     if(messageTemp == "true"){
       Serial.println("Activar valvula de solidos");
       aguaSolida = 0;
@@ -229,7 +223,7 @@ void callback(char* topic, byte* message, unsigned int length) {
   }// fin del if (String(topic) == "")
 
 
-  if (String(topic) == "CodigoIoT/SIC/G5/H2O/valLimpia") {  // En caso de recibirse mensaje en el tema esp32/output
+  if (String(topic) == "CodigoIoT/SIC/G5/H2O/valLimpia") {  // En caso de recibirse mensaje en el tema
     if(messageTemp == "true"){
       Serial.println("Activar valvula de Limpia");
       aguaLimpia = 0;
@@ -240,7 +234,7 @@ void callback(char* topic, byte* message, unsigned int length) {
     }// fin del else if(messageTemp == "false")
   }// fin del if (String(topic) == "")
 
-  if (String(topic) == "CodigoIoT/SIC/G5/H2O/manuAuto") {  // En caso de recibirse mensaje en el tema esp32/output
+  if (String(topic) == "CodigoIoT/SIC/G5/H2O/manuAuto") {  // En caso de recibirse mensaje en el tema
     if(messageTemp == "true"){
       Serial.println("Activar modo Automático");
       varManuAuto = 1;
@@ -251,7 +245,7 @@ void callback(char* topic, byte* message, unsigned int length) {
     }// fin del else if(messageTemp == "false")
   }// fin del if (String(topic) == )
 
-  if (String(topic) == "CodigoIoT/SIC/G5/H2O/bomba") {  // En caso de recibirse mensaje en el tema esp32/output
+  if (String(topic) == "CodigoIoT/SIC/G5/H2O/bomba") {  // En caso de recibirse mensaje en el tema
     if(messageTemp == "true"){
       Serial.println("Activar BOMBA");
       varBomba = 1;
@@ -337,7 +331,8 @@ void reconnect() {
     // Intentar reconexión
     if (client.connect("ESP32CAMClient")) { //Pregunta por el resultado del intento de conexión
       Serial.println("Conectado");
-      client.subscribe("CodigoIoT/SIC/G5/H2O/valSolidos"); // Esta función realiza la suscripción al tema
+      // Esta función realiza la suscripción al tema
+      client.subscribe("CodigoIoT/SIC/G5/H2O/valSolidos"); 
       client.subscribe("CodigoIoT/SIC/G5/H2O/valLimpia");
       client.subscribe("CodigoIoT/SIC/G5/H2O/manuAuto");
       client.subscribe("CodigoIoT/SIC/G5/H2O/bomba");
@@ -346,8 +341,7 @@ void reconnect() {
       Serial.print("Conexion fallida, Error rc=");
       Serial.print(client.state()); // Muestra el codigo de error
       Serial.println(" Volviendo a intentar en 5 segundos");
-      // Espera de 5 segundos bloqueante
-      delay(5000);
+      delay(5000);  // Espera de 5 segundos bloqueante
       Serial.println (client.connected ()); // Muestra estatus de conexión
     }// fin del else
   }// fin del bucle while (!client.connected())
